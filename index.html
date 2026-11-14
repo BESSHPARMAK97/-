@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Дерево строительства</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-icon">🏗️</span>
+      <div>
+        <h1>Дерево строительства</h1>
+        <p class="subtitle">Путь объекта от идеи до регистрации · Казахстан</p>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="xp">
+        <div class="xp-label"><span id="xpText">0%</span><span id="stagesText">0 / 0 этапов</span></div>
+        <div class="xp-bar"><div class="xp-fill" id="xpFill"></div></div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <label class="switch" title="Свободный режим: можно отмечать пункты закрытых этапов">
+        <input type="checkbox" id="freeMode">
+        <span>Свободный режим</span>
+      </label>
+      <div class="btn-group">
+        <button class="btn icon" id="zoomOut" title="Отдалить">−</button>
+        <button class="btn icon" id="zoomReset" title="Масштаб 100%">100%</button>
+        <button class="btn icon" id="zoomIn" title="Приблизить">+</button>
+      </div>
+      <button class="btn" id="exportBtn" title="Сохранить прогресс в файл">Экспорт</button>
+      <button class="btn" id="importBtn" title="Загрузить прогресс из файла">Импорт</button>
+      <button class="btn danger" id="resetBtn" title="Сбросить весь прогресс">Сброс</button>
+      <input type="file" id="importFile" accept="application/json" hidden>
+    </div>
+  </header>
+
+  <main class="viewport" id="viewport">
+    <div class="sizer" id="sizer">
+      <div class="tree" id="tree">
+        <div class="phases" id="phases"></div>
+        <svg class="links" id="links" aria-hidden="true"></svg>
+        <div class="nodes" id="nodes"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="legend">
+    <span><i class="dot locked"></i>Закрыт</span>
+    <span><i class="dot available"></i>Доступен</span>
+    <span><i class="dot progress"></i>В работе</span>
+    <span><i class="dot done"></i>Завершён</span>
+    <span class="legend-hint">Перетаскивайте карту мышью · кликните этап, чтобы открыть подпункты</span>
+  </footer>
+
+  <aside class="panel" id="panel" aria-hidden="true">
+    <button class="panel-close" id="panelClose" title="Закрыть (Esc)">✕</button>
+    <div id="panelBody"></div>
+  </aside>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
