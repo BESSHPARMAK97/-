@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Дерево строительства</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-icon">🏗️</span>
+      <div>
+        <h1 data-i18n="appTitle">Дерево строительства</h1>
+        <p class="subtitle" data-i18n="subtitle">Путь объекта от идеи до регистрации · Казахстан</p>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="xp">
+        <div class="xp-label"><span id="xpText">0%</span><span id="stagesText">0 / 0 этапов</span></div>
+        <div class="xp-bar"><div class="xp-fill" id="xpFill"></div></div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="lang-switch" role="group" data-i18n-title="language">
+        <button class="btn" data-lang="ru">Рус</button>
+        <button class="btn" data-lang="kk">Қаз</button>
+      </div>
+      <label class="switch" data-i18n-title="freeModeTitle">
+        <input type="checkbox" id="freeMode">
+        <span data-i18n="freeMode">Свободный режим</span>
+      </label>
+      <div class="btn-group">
+        <button class="btn icon" id="zoomOut" data-i18n-title="zoomOut">−</button>
+        <button class="btn icon" id="zoomReset" data-i18n-title="zoomReset">100%</button>
+        <button class="btn icon" id="zoomIn" data-i18n-title="zoomIn">+</button>
+      </div>
+      <button class="btn" id="exportBtn" data-i18n="export" data-i18n-title="exportTitle">Экспорт</button>
+      <button class="btn" id="importBtn" data-i18n="import" data-i18n-title="importTitle">Импорт</button>
+      <button class="btn danger" id="resetBtn" data-i18n="reset" data-i18n-title="resetTitle">Сброс</button>
+      <input type="file" id="importFile" accept="application/json" hidden>
+    </div>
+  </header>
+
+  <main class="viewport" id="viewport">
+    <div class="sizer" id="sizer">
+      <div class="tree" id="tree">
+        <div class="phases" id="phases"></div>
+        <svg class="links" id="links" aria-hidden="true"></svg>
+        <div class="nodes" id="nodes"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="legend">
+    <span><i class="dot locked"></i><b data-i18n="locked">Закрыт</b></span>
+    <span><i class="dot available"></i><b data-i18n="available">Доступен</b></span>
+    <span><i class="dot progress"></i><b data-i18n="progress">В работе</b></span>
+    <span><i class="dot done"></i><b data-i18n="done">Завершён</b></span>
+    <span class="legend-hint" data-i18n="legendHint">Перетаскивайте карту мышью · кликните этап, чтобы открыть подпункты</span>
+  </footer>
+
+  <aside class="panel" id="panel" aria-hidden="true">
+    <button class="panel-close" id="panelClose" data-i18n-title="close">✕</button>
+    <div id="panelBody"></div>
+  </aside>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
