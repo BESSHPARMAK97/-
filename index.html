@@ -4,6 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Дерево строительства</title>
+  <meta name="theme-color" content="#0b1020">
+  <meta name="description" content="Дорожная карта строительства в стиле дерева технологий: этапы и подпункты по процедурам Казахстана.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -14,6 +21,13 @@
         <h1 data-i18n="appTitle">Дерево строительства</h1>
         <p class="subtitle" data-i18n="subtitle">Путь объекта от идеи до регистрации · Казахстан</p>
       </div>
+    </div>
+
+    <div class="project-bar">
+      <select id="projectSelect" data-i18n-title="project"></select>
+      <button class="btn icon" id="renameProjectBtn" data-i18n-title="renameProject">✎</button>
+      <button class="btn icon danger" id="deleteProjectBtn" data-i18n-title="deleteProject">🗑</button>
+      <button class="btn" id="newProjectBtn" data-i18n-title="newProject">＋ <span data-i18n="newProject">Новый объект</span></button>
     </div>
 
     <div class="stats">
@@ -39,6 +53,7 @@
       </div>
       <button class="btn" id="exportBtn" data-i18n="export" data-i18n-title="exportTitle">Экспорт</button>
       <button class="btn" id="importBtn" data-i18n="import" data-i18n-title="importTitle">Импорт</button>
+      <button class="btn primary" id="installBtn" data-i18n="install" data-i18n-title="installTitle" hidden>Установить</button>
       <button class="btn danger" id="resetBtn" data-i18n="reset" data-i18n-title="resetTitle">Сброс</button>
       <input type="file" id="importFile" accept="application/json" hidden>
     </div>
@@ -68,6 +83,10 @@
   </aside>
 
   <div class="toast" id="toast"></div>
+
+  <div class="modal" id="modal" role="dialog" aria-modal="true">
+    <div class="modal-card" id="modalCard"></div>
+  </div>
 
   <script src="js/data.js"></script>
   <script src="js/i18n.js"></script>
