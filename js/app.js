@@ -4,7 +4,7 @@
   var data = window.ROADMAP;
   var STORAGE_KEY = 'stroy-roadmap-v1';
   var COL_W = 260, ROW_H = 150, PAD_X = 30, PAD_Y = 90, NODE_W = 210, NODE_H = 96;
-  var STATUS_LABEL = { locked: 'Закрыт', available: 'Доступен', progress: 'В работе', done: 'Завершён' };
+  var I18N = window.I18N;
 
   // ---------- Подготовка данных ----------
   var byId = {};
@@ -15,6 +15,15 @@
       var arr = Array.isArray(it) ? it : [it];
       return { id: s.id + '-' + i, title: arr[0], hint: arr[1] || '' };
     });
+    // Казахский перевод этапа и его подпунктов
+    var kk = I18N.kk.stages[s.id];
+    if (kk) {
+      s.kk = kk;
+      s.items.forEach(function (it, i) {
+        var t = kk.items && kk.items[i];
+        if (t) { it.kkTitle = t[0]; it.kkHint = t[1] || ''; }
+      });
+    }
   });
   data.stages.forEach(function (s) {
     s.requires.forEach(function (r) { byId[r].unlocks.push(s.id); });
@@ -25,7 +34,37 @@
   var selectedId = null;
   var statusCache = {};
 
-  function defaultState() { return { checked: {}, custom: {}, free: false, zoom: 1 }; }
+  function defaultState() { return { checked: {}, custom: {}, free: false, zoom: 1, lang: detectLang() }; }
+
+  function detectLang() {
+    var l = (navigator.language || '').toLowerCase();
+    return l.indexOf('kk') === 0 ? 'kk' : 'ru';
+  }
+
+  // ---------- Перевод ----------
+  function T(key, vars) {
+    var str = (I18N.ui[state.lang] || I18N.ui.ru)[key] || I18N.ui.ru[key] || key;
+    if (vars) Object.keys(vars).forEach(function (k) { str = str.replace('{' + k + '}', vars[k]); });
+    return str;
+  }
+  // Поле этапа на текущем языке (с откатом на русский)
+  function L(s, field) {
+    return (state.lang === 'kk' && s.kk && s.kk[field]) || s[field];
+  }
+  function itemTitle(it) { return (state.lang === 'kk' && it.kkTitle) || it.title; }
+  function itemHint(it) { return state.lang === 'kk' && it.kkTitle ? it.kkHint : it.hint; }
+  function phaseTitle(ph) { return (state.lang === 'kk' && I18N.kk.phases[ph.id]) || ph.title; }
+
+  function applyStaticText() {
+    document.documentElement.lang = state.lang;
+    document.title = T('appTitle');
+    document.querySelectorAll('[data-i18n]').forEach(function (n) { n.textContent = T(n.dataset.i18n); });
+    document.querySelectorAll('[data-i18n-title]').forEach(function (n) { n.title = T(n.dataset.i18nTitle); });
+    document.querySelectorAll('[data-lang]').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.lang === state.lang);
+      b.setAttribute('aria-pressed', b.dataset.lang === state.lang);
+    });
+  }
 
   function load() {
     try {
@@ -95,7 +134,8 @@
       d.style.setProperty('--c', ph.color);
       d.style.left = (PAD_X + ph.from * COL_W - 20) + 'px';
       d.style.width = ((ph.to - ph.from + 1) * COL_W) + 'px';
-      d.innerHTML = '<div class="phase-title">Эпоха ' + (i + 1) + '<small>' + esc(ph.title) + '</small></div>';
+      d.innerHTML = '<div class="phase-title"><span class="phase-era"></span><small></small></div>';
+      d.dataset.phase = i;
       el.phases.appendChild(d);
     });
 
@@ -110,7 +150,7 @@
       b.innerHTML =
         '<div class="node-icon">' + s.icon + '</div>' +
         '<div class="node-body">' +
-          '<div class="node-title">' + esc(s.title) + '</div>' +
+          '<div class="node-title"></div>' +
           '<div class="node-meta"><span class="node-status"></span><span class="node-count"></span></div>' +
           '<div class="node-bar"><i></i></div>' +
         '</div>';
@@ -122,14 +162,20 @@
   }
 
   function renderNodes() {
+    el.phases.querySelectorAll('.phase').forEach(function (d) {
+      var i = +d.dataset.phase;
+      d.querySelector('.phase-era').textContent = T('era') + ' ' + (i + 1);
+      d.querySelector('small').textContent = phaseTitle(data.phases[i]);
+    });
     data.stages.forEach(function (s) {
       var b = el.nodes.querySelector('[data-id="' + s.id + '"]');
       var st = statusOf(s), p = progressOf(s);
       b.className = 'node ' + st + (s.id === selectedId ? ' selected' : '');
-      b.querySelector('.node-status').textContent = STATUS_LABEL[st];
+      b.querySelector('.node-title').textContent = L(s, 'title');
+      b.querySelector('.node-status').textContent = T(st);
       b.querySelector('.node-count').textContent = p.done + '/' + p.total;
       b.querySelector('.node-bar > i').style.width = (p.total ? p.done / p.total * 100 : 0) + '%';
-      b.setAttribute('aria-label', s.title + ', ' + STATUS_LABEL[st] + ', ' + p.done + ' из ' + p.total);
+      b.setAttribute('aria-label', L(s, 'title') + ', ' + T(st) + ', ' + p.done + '/' + p.total);
     });
   }
 
@@ -173,11 +219,12 @@
     var pct = total ? Math.round(done / total * 100) : 0;
     document.getElementById('xpText').textContent = pct + '%';
     document.getElementById('xpFill').style.width = pct + '%';
-    document.getElementById('stagesText').textContent = stagesDone + ' / ' + data.stages.length + ' этапов завершено';
+    document.getElementById('stagesText').textContent = T('stagesDone', { n: stagesDone, t: data.stages.length });
   }
 
   function render() {
     statusCache = {};
+    applyStaticText();
     renderNodes();
     renderLinks();
     renderStats();
@@ -204,7 +251,7 @@
     return ids.map(function (id) {
       var s = byId[id];
       var cls = statusOf(s) === 'done' ? ' done' : '';
-      return '<button class="chip' + cls + '" data-goto="' + id + '">' + s.icon + ' ' + esc(s.title) + '</button>';
+      return '<button class="chip' + cls + '" data-goto="' + id + '">' + s.icon + ' ' + esc(L(s, 'title')) + '</button>';
     }).join('');
   }
 
@@ -219,34 +266,34 @@
       var checked = !!state.checked[it.id];
       return '<li class="' + (checked ? 'checked' : '') + '">' +
         '<input type="checkbox" id="cb-' + it.id + '" data-item="' + it.id + '"' + (checked ? ' checked' : '') + (editable ? '' : ' disabled') + '>' +
-        '<label for="cb-' + it.id + '"><span class="item-title">' + esc(it.title) + '</span>' +
-          (isCustom ? '<span class="custom-tag">свой</span>' : '') +
-          (it.hint ? '<span class="item-hint">' + esc(it.hint) + '</span>' : '') + '</label>' +
-        (isCustom ? '<button class="item-del" data-del="' + it.id + '" title="Удалить пункт">✕</button>' : '') +
+        '<label for="cb-' + it.id + '"><span class="item-title">' + esc(itemTitle(it)) + '</span>' +
+          (isCustom ? '<span class="custom-tag">' + T('custom') + '</span>' : '') +
+          (itemHint(it) ? '<span class="item-hint">' + esc(itemHint(it)) + '</span>' : '') + '</label>' +
+        (isCustom ? '<button class="item-del" data-del="' + it.id + '" title="' + T('deleteItem') + '">✕</button>' : '') +
         '</li>';
     }).join('');
 
     el.panelBody.innerHTML =
       '<div class="panel-head">' +
         '<div class="node-icon">' + s.icon + '</div>' +
-        '<div><h2>' + esc(s.title) + '</h2><span class="badge ' + st + '">' + STATUS_LABEL[st] + '</span></div>' +
+        '<div><h2>' + esc(L(s, 'title')) + '</h2><span class="badge ' + st + '">' + T(st) + '</span></div>' +
       '</div>' +
-      '<p class="desc">' + esc(s.desc) + '</p>' +
-      (st === 'locked' ? '<div class="locked-note">🔒 Чтобы открыть этап, завершите: ' +
-        missing.map(function (r) { return esc(byId[r].title); }).join(', ') +
-        (state.free ? '<br>Включён свободный режим — пункты можно отмечать.' : '') + '</div>' : '') +
+      '<p class="desc">' + esc(L(s, 'desc')) + '</p>' +
+      (st === 'locked' ? '<div class="locked-note">' + T('lockedNote') +
+        missing.map(function (r) { return esc(L(byId[r], 'title')); }).join(', ') +
+        (state.free ? '<br>' + T('freeNote') : '') + '</div>' : '') +
       '<div class="facts">' +
-        '<div><b>Ответственный</b>' + esc(s.who) + '</div>' +
-        '<div><b>Результат этапа</b>' + esc(s.result) + '</div>' +
+        '<div><b>' + T('who') + '</b>' + esc(L(s, 'who')) + '</div>' +
+        '<div><b>' + T('result') + '</b>' + esc(L(s, 'result')) + '</div>' +
       '</div>' +
-      '<div class="section-title">Требует</div><div class="chips">' + chipList(s.requires, 'Стартовый этап') + '</div>' +
-      '<div class="section-title">Открывает</div><div class="chips">' + chipList(s.unlocks, 'Финальный этап 🎉') + '</div>' +
-      '<div class="section-title">Подпункты <span class="mini-progress">' + p.done + ' / ' + p.total + '</span></div>' +
+      '<div class="section-title">' + T('requires') + '</div><div class="chips">' + chipList(s.requires, T('startStage')) + '</div>' +
+      '<div class="section-title">' + T('unlocks') + '</div><div class="chips">' + chipList(s.unlocks, T('finalStage')) + '</div>' +
+      '<div class="section-title">' + T('items') + ' <span class="mini-progress">' + p.done + ' / ' + p.total + '</span></div>' +
       '<ul class="checklist">' + items + '</ul>' +
-      '<form class="add-item" id="addForm"><input id="addInput" placeholder="Добавить свой подпункт…" maxlength="140"><button class="btn" type="submit">+</button></form>' +
+      '<form class="add-item" id="addForm"><input id="addInput" placeholder="' + T('addPlaceholder') + '" maxlength="140"><button class="btn" type="submit">+</button></form>' +
       '<div class="panel-actions">' +
-        '<button class="btn" id="checkAll"' + (editable ? '' : ' disabled') + '>Отметить все</button>' +
-        '<button class="btn danger" id="clearStage">Сбросить этап</button>' +
+        '<button class="btn" id="checkAll"' + (editable ? '' : ' disabled') + '>' + T('checkAll') + '</button>' +
+        '<button class="btn danger" id="clearStage">' + T('clearStage') + '</button>' +
       '</div>';
   }
 
@@ -292,9 +339,9 @@
     data.stages.forEach(function (s) {
       if (before[s.id] !== 'done' && statusOf(s) === 'done') {
         var opened = s.unlocks.filter(function (u) { return before[u] === 'locked' && statusOf(byId[u]) !== 'locked'; });
-        var msg = '🏆 Этап «' + s.title + '» завершён!';
-        if (opened.length) msg += ' Открыто: ' + opened.map(function (u) { return byId[u].title; }).join(', ');
-        else if (!s.unlocks.length) msg = '🎉 Объект построен и зарегистрирован! Поздравляем!';
+        var msg = T('stageDone', { s: L(s, 'title') });
+        if (opened.length) msg += T('opened') + opened.map(function (u) { return L(byId[u], 'title'); }).join(', ');
+        else if (!s.unlocks.length) msg = T('finished');
         toast(msg);
       }
     });
@@ -365,10 +412,11 @@
   freeBox.onchange = function () { state.free = freeBox.checked; save(); render(); };
 
   document.getElementById('resetBtn').onclick = function () {
-    if (!confirm('Сбросить весь прогресс и свои подпункты?')) return;
-    var zoom = state.zoom;
+    if (!confirm(T('resetConfirm'))) return;
+    var zoom = state.zoom, lang = state.lang;
     state = defaultState();
     state.zoom = zoom;
+    state.lang = lang;
     freeBox.checked = false;
     save(); render();
   };
@@ -393,12 +441,16 @@
       state = Object.assign(defaultState(), parsed);
       freeBox.checked = !!state.free;
       save(); applyZoom(); render();
-      toast('📥 Прогресс загружен');
-    }).catch(function () { toast('⚠️ Не удалось прочитать файл'); });
+      toast(T('imported'));
+    }).catch(function () { toast(T('importError')); });
     fileInput.value = '';
   };
 
   document.getElementById('panelClose').onclick = closePanel;
+
+  document.querySelectorAll('[data-lang]').forEach(function (b) {
+    b.onclick = function () { state.lang = b.dataset.lang; save(); render(); };
+  });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && selectedId) closePanel(); });
 
   // ---------- Утилиты ----------

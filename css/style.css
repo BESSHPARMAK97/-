@@ -207,7 +207,15 @@ button { font: inherit; color: inherit; }
   .brand h1 { font-size: 16px; }
   .stats { order: 3; max-width: none; flex-basis: 100%; }
   .toolbar { margin-left: 0; }
-  .legend-hint { display: none; }
+  .legend .legend-hint { display: none; }
   .legend { padding: 8px 16px; gap: 12px; }
   .panel { top: auto; height: 78vh; width: 100%; border-left: 0; border-top: 1px solid var(--line); border-radius: 18px 18px 0 0; transform: translateY(105%); padding: 22px 16px; }
 }
+
+/* ---------- Переключатель языка ---------- */
+.lang-switch { display: flex; }
+.lang-switch .btn { border-radius: 0; margin-left: -1px; padding: 7px 10px; color: var(--muted); }
+.lang-switch .btn:first-child { border-radius: 8px 0 0 8px; }
+.lang-switch .btn:last-child { border-radius: 0 8px 8px 0; }
+.lang-switch .btn.active { color: var(--bg); background: var(--available); border-color: var(--available); font-weight: 700; }
+.legend b { font-weight: inherit; }
